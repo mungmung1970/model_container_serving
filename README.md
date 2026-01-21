@@ -1,4 +1,5 @@
-```project/
+```
+project/
 ├─ researcher1/
 │  ├─ Dockerfile
 │  ├─ requirements.txt
@@ -12,4 +13,6 @@
 │  ├─ requirements.txt
 │  └─ inference.ipynb
 │
-└─ docker-compose.yml```
+└─ docker-compose.yml
+
+```
