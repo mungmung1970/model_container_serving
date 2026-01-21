@@ -1,0 +1,19 @@
+version: "3.9"
+
+services:
+  trainer:
+    image: yourdockerhubid/perf-trainer:1.0
+    volumes:
+      - artifacts:/artifacts
+
+  notebook:
+    build: ./researcher2
+    ports:
+      - "8888:8888"
+    volumes:
+      - artifacts:/artifacts
+    depends_on:
+      - trainer
+
+volumes:
+  artifacts:
