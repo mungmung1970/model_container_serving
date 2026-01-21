@@ -1,17 +1,25 @@
-version: "3.9"
-
 services:
   trainer:
-    image: yourdockerhubid/perf-trainer:1.0
+    image: mungmung1970/perf-trainer:1.0
+    container_name: perf-trainer
+    environment:
+      - DATA_DIR=/app/data
+      - ART_DIR=/artifacts
     volumes:
+      - ./data:/app/data:ro
       - artifacts:/artifacts
+    command: python train.py
 
   notebook:
     build: ./researcher2
+    container_name: perf-notebook
+    environment:
+      - DATA_DIR=/home/jovyan/work/data
+      - ART_DIR=/home/jovyan/work/artifacts
+    volumes:
+      - ./:/home/jovyan/work 
     ports:
       - "8888:8888"
-    volumes:
-      - artifacts:/artifacts
     depends_on:
       - trainer
 

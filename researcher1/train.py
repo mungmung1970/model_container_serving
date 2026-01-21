@@ -1,7 +1,9 @@
+import os
 import json
 import shutil
 import numpy as np
 import pandas as pd
+from pathlib import Path
 
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
@@ -11,49 +13,38 @@ from skl2onnx import convert_sklearn
 from skl2onnx.common.data_types import FloatTensorType
 
 
-DATA_DIR = "/app/data"
-ART_DIR = "/artifacts"
+# ✅ 로컬 / Docker 공통 경로
+DATA_DIR = Path(os.getenv("DATA_DIR", "data"))
+ART_DIR = Path(os.getenv("ART_DIR", "artifacts"))
 
 
-def preprocess(df: pd.DataFrame) -> pd.DataFrame:
-    df = df.copy()
-    df["extra_yn"] = df["Extracurricular Activities"].map({"Yes": 1, "No": 0})
-
-    df["study_efficiency"] = df["Previous Scores"] / df["Hours Studied"]
-    df["practice_ratio"] = df["Sample Question Papers Practiced"] / df["Hours Studied"]
-    df["study_sleep_ratio"] = df["Hours Studied"] / df["Sleep Hours"]
-    df["conditioned_study"] = df["Sleep Hours"] * np.log1p(df["Hours Studied"])
-    df["focus_index"] = df["Hours Studied"] / (df["extra_yn"] + 1)
-    df["learning_engagement"] = (
-        df["Hours Studied"]
-        + df["Sample Question Papers Practiced"]
-        - df["extra_yn"] * 0.5
-    )
-    df["balance_score"] = (df["Sleep Hours"] / (df["Hours Studied"] + 1)) * (
-        1 + df["extra_yn"]
-    )
-
-    return df
+FEATURE_COLUMNS = [
+    "Hours Studied",
+    "Sleep Hours",
+    "Sample Question Papers Practiced",
+    "extra_yn",
+    "study_efficiency",
+    "practice_ratio",
+    "conditioned_study",
+    "focus_index",
+    "learning_engagement",
+    "balance_score",
+]
 
 
 def main():
-    df = pd.read_csv(f"{DATA_DIR}/mission15_train_add.csv")
-    df = preprocess(df)
+    train_path = DATA_DIR / "mission15_train_add.csv"
+    test_path = DATA_DIR / "mission15_test.csv"
 
-    feature_cols = [
-        "Hours Studied",
-        "Sleep Hours",
-        "Sample Question Papers Practiced",
-        "extra_yn",
-        "study_efficiency",
-        "practice_ratio",
-        "conditioned_study",
-        "focus_index",
-        "learning_engagement",
-        "balance_score",
-    ]
+    print(f"[INFO] Train data: {train_path.resolve()}")
+    print(f"[INFO] Artifact dir: {ART_DIR.resolve()}")
 
-    X = df[feature_cols]
+    if not train_path.exists():
+        raise FileNotFoundError(train_path)
+
+    df = pd.read_csv(train_path)
+
+    X = df[FEATURE_COLUMNS]
     y = df["Performance Index"]
 
     X_train, X_test, y_train, y_test = train_test_split(
@@ -66,25 +57,29 @@ def main():
     y_pred = model.predict(X_test)
     rmse = np.sqrt(mean_squared_error(y_test, y_pred))
 
-    # --- save metrics ---
-    with open(f"{ART_DIR}/metrics.json", "w") as f:
-        json.dump({"rmse": rmse}, f, indent=2)
+    # --- artifacts ---
+    ART_DIR.mkdir(parents=True, exist_ok=True)
 
-    # --- save feature schema ---
-    with open(f"{ART_DIR}/features.json", "w") as f:
-        json.dump(feature_cols, f, indent=2)
+    (ART_DIR / "metrics.json").write_text(
+        json.dumps({"rmse": rmse}, indent=2), encoding="utf-8"
+    )
 
-    # --- convert to ONNX ---
-    initial_type = [("float_input", FloatTensorType([None, len(feature_cols)]))]
+    (ART_DIR / "features.json").write_text(
+        json.dumps(FEATURE_COLUMNS, indent=2), encoding="utf-8"
+    )
+
+    # --- ONNX ---
+    initial_type = [("float_input", FloatTensorType([None, len(FEATURE_COLUMNS)]))]
     onnx_model = convert_sklearn(model, initial_types=initial_type)
 
-    with open(f"{ART_DIR}/model.onnx", "wb") as f:
+    with open(ART_DIR / "model.onnx", "wb") as f:
         f.write(onnx_model.SerializeToString())
 
-    # --- provide test.csv for researcher2 ---
-    shutil.copy(f"{DATA_DIR}/test.csv", f"{ART_DIR}/test.csv")
+    # 추론용 test 제공 (Docker 기준)
+    if test_path.exists():
+        shutil.copy(test_path, ART_DIR / "mission15_test.csv")
 
-    print(f"Training complete. RMSE = {rmse:.4f}")
+    print(f"✅ Training complete. RMSE = {rmse:.4f}")
 
 
 if __name__ == "__main__":
