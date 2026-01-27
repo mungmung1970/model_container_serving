@@ -6,23 +6,27 @@ project/
 |  ├─ metrics.json (researcher2 공유정보-target)
 |  ├─ mission_test_add.csv(researcher2 전처리후 데이터)
 |  └─ mission_test.csv(researcher2 공유 데이터)
+│
 ├─ Data/ (Researcher2 적업 데이터)
 │  ├─ mission15_test.csv
 |  ├─ mission_train_add.csv(researcher1 전처리후 데이터)
 |  └─ mission_traincsv(researcher2 훈련 데이터)
+│
 ├─ researcher1/ (Train)
-│  ├─ Dockerfile
+│  └─notebooks/
+│     ├─ eda_preprocessing.ipynb (EDA 및 전처리)
+│     ├─ eda_preprocessing.ipynb (EDA 및 전처리)
+│     └─ modeling.ipynb(Train수행-노트북 버전)
+│  ├─ Dockerfile 
 │  ├─ requirements.txt
-│  ├─ train.py
-│  └─ data/
-│     ├─ train.csv
-│     └─ test.csv
+│  └─ train.py (훈련 python버전)
 │
 ├─ researcher2/ (Inference)
 │  ├─ Dockerfile
 │  ├─ requirements.txt
-│  └─ inference.ipynb
-│
+│  ├─ inference.ipynb (추론(예측) 노트북 버전)
+│  ├─ inference.py (추론(예측) 파이선 버전)
+│  └─ preprocess.py (테스트 데이터 전처리 - 추가 feature 생성, inference.py에서 호출)
 └─ docker-compose.yml
 
 ```
@@ -56,17 +60,6 @@ docker compose up notebook
 콜솔에 아래와 같이 나옴.  이에 접속
 http://127.0.0.1:8888/lab?token=토큰
 
-
 #7 inference.ipynb 실행
 /artifacts/result.csv 생성
-```
-
-
-# 기타사항 - 추가로 테스트 할 사항
-```
-- RandomForest → ONNX 가능 모델 추천
-- Dev Container로 하는 방식
-- FastAPI 서빙 추가
-- MLflow로 확장한 MLOps 구조
-
 ```
