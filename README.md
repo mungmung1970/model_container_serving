@@ -1,6 +1,15 @@
 # 디렉토리 구성
 ```
 project/
+├─ artifacts/
+│  ├─ features.json (researcher2 공유정보-feature)
+|  ├─ metrics.json (researcher2 공유정보-target)
+|  ├─ mission_test_add.csv(researcher2 전처리후 데이터)
+|  └─ mission_test.csv(researcher2 공유 데이터)
+├─ Data/ (Researcher2 적업 데이터)
+│  ├─ mission15_test.csv
+|  ├─ mission_train_add.csv(researcher1 전처리후 데이터)
+|  └─ mission_traincsv(researcher2 훈련 데이터)
 ├─ researcher1/ (Train)
 │  ├─ Dockerfile
 │  ├─ requirements.txt
