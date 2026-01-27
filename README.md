@@ -37,7 +37,7 @@ project/
 cd researcher1
 docker build -t mungmung1970/perf-trainer:1.0 .
 
-# 2. Docker Hub 재업로드
+# 2. Docker Hub 재업로드 (https://hub.docker.com/repository/docker/mungmung1970/perf-trainer/general)
 docker push mungmung1970/perf-trainer:1.0
 
 # 3. 컨테이너 실행
